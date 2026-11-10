@@ -95,4 +95,8 @@ def test_remembered_events_cli(capsys):
     main(["verify", "--date", "1984-12-19", "--time", "23:06", "--gender", "M", "--longitude", "101.69",
           "--event", "2013:relocation,health", "--event", "2025:relocation", "--event", "2016:none"])
     out = capsys.readouterr().out
-    assert "Best match" in out and "辛亥" in out.split("Best match")[1]
+    # These events hinge on the 丁亥 day branch (巳亥 clash), so the 戊子-day
+    # candidates must drop out while the hour candidates stay in contention.
+    best = out.split("Best match")[1]
+    assert "丁亥" in best
+    assert "| 0% | 甲子 丙子 戊子" in out
