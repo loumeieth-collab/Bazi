@@ -89,3 +89,10 @@ def test_simple_answer_format_and_cli(tmp_path, capsys):
 def test_legacy_cli_still_works(capsys):
     main(["--date", "1984-12-19", "--time", "23:06", "--gender", "M", "--year", "2027"])
     assert "2027 丁未" in capsys.readouterr().out
+
+
+def test_remembered_events_cli(capsys):
+    main(["verify", "--date", "1984-12-19", "--time", "23:06", "--gender", "M", "--longitude", "101.69",
+          "--event", "2013:relocation,health", "--event", "2025:relocation", "--event", "2016:none"])
+    out = capsys.readouterr().out
+    assert "Best match" in out and "辛亥" in out.split("Best match")[1]

@@ -86,9 +86,17 @@ def cmd_verify(a) -> None:
         print(f"wrote {a.export_questions}")
         return
 
-    if a.answers:
-        with open(a.answers, encoding="utf-8") as fh:
-            answers = json.load(fh)
+    if a.answers or a.event:
+        answers = {}
+        if a.answers:
+            with open(a.answers, encoding="utf-8") as fh:
+                answers = json.load(fh)
+        from .verify import merge_answer
+        for ev in a.event or []:
+            # "2014:career,relocation" — a remembered year; "2014:none" — a quiet year
+            y, _, cats = ev.partition(":")
+            happened = [] if cats.strip() in ("", "none") else [c.strip() for c in cats.split(",")]
+            merge_answer(answers, int(y), list(CATEGORIES) if not happened else happened, happened)
     elif sys.stdin.isatty():
         print(f"Checking {len(cands)} candidate charts:")
         for c in cands:
@@ -141,6 +149,9 @@ def main(argv=None):
     pv.add_argument("--to-year", type=int, help="latest year to consider (default: last year)")
     pv.add_argument("--all-hours", action="store_true", help="test all 12 two-hour periods (unknown time)")
     pv.add_argument("--vary-gender", action="store_true", help="also test the other luck direction")
+    pv.add_argument("--event", action="append", metavar="YEAR:CATS",
+                    help="a remembered event, e.g. 2014:career or 2019:family,relocation; "
+                         "2016:none for a year with nothing major (repeatable)")
     pv.add_argument("--answers", help="JSON file of answers (skip the interactive prompts)")
     pv.add_argument("--rounds", type=int, default=3, help="max interactive rounds (default 3)")
     pv.add_argument("--followup", type=int, default=4, help="years per follow-up round (default 4)")

@@ -55,6 +55,7 @@ candidates (`--rounds`, `--followup`). Other options:
 |---|---|
 | `--all-hours` | birth hour unknown: test all 12 two-hour periods (automatic if `--time` is omitted) |
 | `--vary-gender` | also test the opposite luck-pillar direction |
+| `--event 2014:career --event 2019:family,relocation` | score events you remember (no prompts); `2016:none` marks a quiet year |
 | `--export-questions q.json` | write the questionnaire as JSON (for a form/app) |
 | `--answers a.json` | score saved answers non-interactively |
 | `--answers a.json --next-questions` | print adaptive follow-up years for saved answers |
