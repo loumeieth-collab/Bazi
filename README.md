@@ -32,6 +32,44 @@ python -m bazi --date 1990-05-01 --time 14:30 --gender M --tz 8 \
 
 Omit `--time` if the birth hour is unknown; the hour pillar is then left out.
 
+## Verify the chart (定盘)
+
+Birth times are often rounded, and conventions differ (clock vs true solar time,
+晚子时 vs 子初换日). `verify` builds every plausible candidate chart, predicts which
+kinds of big events each one expects in your past years, asks about the years where the
+candidates disagree most, then ranks them by how well they match what actually happened.
+
+```bash
+python -m bazi verify --date 1990-05-01 --time 14:30 --gender F --tz 8 --longitude 101.69
+```
+
+You are shown a few years and answer with the event types that happened:
+
+1. Career change · 2. Relationship · 3. Relocation · 4. Money gain/loss ·
+5. Health · 6. Family (child born, parent ill/lost) · 7. Study / property
+
+If the result is not conclusive, follow-up rounds target only the front-running
+candidates (`--rounds`, `--followup`). Other options:
+
+| Option | Meaning |
+|---|---|
+| `--all-hours` | birth hour unknown: test all 12 two-hour periods (automatic if `--time` is omitted) |
+| `--vary-gender` | also test the opposite luck-pillar direction |
+| `--export-questions q.json` | write the questionnaire as JSON (for a form/app) |
+| `--answers a.json` | score saved answers non-interactively |
+| `--answers a.json --next-questions` | print adaptive follow-up years for saved answers |
+| `--save-answers a.json` | keep interactive answers for later |
+
+Answer file format — either a list of what happened (all categories considered asked):
+`{"2014": ["career", "relocation"], "2019": []}` — or with the categories that were asked:
+`{"2014": {"asked": ["career", "health", "family"], "happened": ["career"]}}`.
+Categories: `career relationship relocation wealth health family study`.
+
+Scoring is a transparent likelihood model: each candidate assigns each category a
+probability (12% base rate + up to 70% from its chart signals: clashes/combinations on
+the day, month, year and hour pillars, ten gods, 驿马/桃花/文昌, luck-pillar changes),
+and answers update a prior that favours the time you gave.
+
 ## Tests
 
 ```bash
