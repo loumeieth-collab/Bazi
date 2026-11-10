@@ -15,7 +15,7 @@ from datetime import datetime, timedelta
 from .chart import Chart, Pillar
 from .data import HIDDEN_STEMS, SIX_CLASHES, STEM_CLASHES
 from .forecast import evaluate, year_pillar
-from .interactions import branch_relations, stem_relations
+from .interactions import branch_relations, group_formations, stem_relations
 from .stars import stars_for_branch
 
 CATEGORIES = {
@@ -136,6 +136,19 @@ def year_signals(chart: Chart, year: int) -> dict[str, float]:
             s[k] += 0.2
     if gods & _spouse_gods(chart):
         s["relationship"] += 0.25
+    # spouse star of the year combined away by a natal stem (合财 / 合官): partner "taken"
+    if chart.ten_god(yp.stem) in _spouse_gods(chart):
+        for name in ("year", "month", "hour"):
+            if any(r == "天干合" for r, _ in stem_relations(yp.stem, p[name].stem) if name in p):
+                s["relationship"] += 0.2
+                break
+    # year completes a three-harmony / directional frame that absorbs the spouse palace
+    natal_branches = [q.branch for q in p.values()]
+    before = group_formations(natal_branches)
+    for kind, trio, el in group_formations(natal_branches + [yp.branch]):
+        if (kind, trio, el) not in before and yp.branch in trio and p["day"].branch in trio:
+            s["relationship"] += 0.3
+            break
 
     # month pillar: career, parents
     if "六冲" in month:

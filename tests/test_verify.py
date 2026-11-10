@@ -100,3 +100,10 @@ def test_remembered_events_cli(capsys):
     best = out.split("Best match")[1]
     assert "丁亥" in best
     assert "| 0% | 甲子 丙子 戊子" in out
+
+
+def test_spouse_palace_frame_and_combined_spouse_star():
+    from bazi.chart import Chart
+    c = Chart(BIRTH, 8, "M", longitude=101.69)  # 丁亥 day; 2021 辛丑 completes 亥子丑
+    assert year_signals(c, 2021)["relationship"] >= 0.7
+    assert year_signals(c, 2011)["relationship"] >= 0.7  # 卯亥 half-combo + 辛 偏财
