@@ -26,11 +26,13 @@ CATEGORIES = {
     "health": "Health: illness, injury, surgery or accident (you)",
     "family": "Family: birth of a child, illness/loss of a parent or elder, family upheaval",
     "study": "Study/property: graduation, major exam or qualification, buying property",
+    "good_year": "Overall a good year: things went your way",
+    "bad_year": "Overall a hard year: stress, setbacks, losses",
 }
 SHORT = {
     "career": "Career change", "relationship": "Relationship change", "relocation": "Moved / relocated",
     "wealth": "Big money gain/loss", "health": "Health issue", "family": "Family event",
-    "study": "Study / property",
+    "study": "Study / property", "good_year": "Good year overall", "bad_year": "Hard year overall",
 }
 
 BASE_RATE = 0.12      # chance an event category happens in a "quiet" year
@@ -208,6 +210,8 @@ def year_signals(chart: Chart, year: int) -> dict[str, float]:
     else:
         ctx = {}
     score = evaluate(chart, yp, str(year), ctx).score
+    s["good_year"] = max(0.0, score / 2)
+    s["bad_year"] = max(0.0, -score / 2)
     if score < -1.0:
         s["health"] += 0.3; s["wealth"] += 0.15
     elif score < -0.5:
@@ -274,11 +278,29 @@ def merge_answer(answers: dict, year: int, asked: list[str], happened: list[str]
     answers[str(year)] = {"asked": asked, "happened": happened}
 
 
+DECADE_RESULTS = ("better", "same", "worse")
+
+
+def decade_probability(chart: Chart, earlier: int, later: int, result: str) -> float:
+    """P(user judges the luck pillar active in `later` better/same/worse than the one in `earlier`)."""
+    from .forecast import evaluate as _ev
+    a = chart.luck_pillar_for_year(earlier)
+    b = chart.luck_pillar_for_year(later)
+    if not a or not b:
+        return 1 / 3
+    d = _ev(chart, b["pillar"], "", {}).score - _ev(chart, a["pillar"], "", {}).score
+    logits = {"better": 1.5 * d, "same": 0.5, "worse": -1.5 * d}
+    z = sum(math.exp(v) for v in logits.values())
+    return 0.05 + 0.85 * math.exp(logits[result]) / z
+
+
 def normalise_answers(answers: dict) -> dict[int, dict]:
     """Accept {"2014": ["career"]} (all categories asked) or
     {"2014": {"asked": [...], "happened": [...]}}."""
     out = {}
     for y, v in answers.items():
+        if y == "decades":
+            continue
         if isinstance(v, dict):
             asked, happened = list(v.get("asked", CATEGORIES)), list(v.get("happened", []))
         else:
@@ -307,6 +329,12 @@ def score_candidates(cands: list[Candidate], answers: dict) -> list[dict]:
                     ll += math.log(1 - pr)
                     if sig[cat] >= 0.5:
                         misses.append(f"{y} no {cat} (predicted)")
+        for earlier, later, result in answers.get("decades", []):
+            if result not in DECADE_RESULTS:
+                raise ValueError(f"decade result must be one of {DECADE_RESULTS}")
+            pr = decade_probability(c.chart, int(earlier), int(later), result)
+            ll += math.log(pr)
+            (hits if pr >= 0.4 else misses).append(f"{later}s {result} than {earlier}s")
         results.append({"candidate": c, "loglik": ll, "hits": hits, "misses": misses})
     m = max(r["loglik"] for r in results)
     z = sum(math.exp(r["loglik"] - m) for r in results)

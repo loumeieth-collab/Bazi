@@ -56,6 +56,8 @@ candidates (`--rounds`, `--followup`). Other options:
 | `--all-hours` | birth hour unknown: test all 12 two-hour periods (automatic if `--time` is omitted) |
 | `--vary-gender` | also test the opposite luck-pillar direction |
 | `--event 2014:career --event 2019:family,relocation` | score events you remember (no prompts); `2016:none` marks a quiet year |
+| `--event 2021:good_year --event 2018:bad_year` | overall good / hard years |
+| `--decade 2010:2020:better` | the luck decade active in 2020 felt better (better/same/worse) than the one in 2010 |
 | `--export-questions q.json` | write the questionnaire as JSON (for a form/app) |
 | `--answers a.json` | score saved answers non-interactively |
 | `--answers a.json --next-questions` | print adaptive follow-up years for saved answers |
@@ -64,7 +66,8 @@ candidates (`--rounds`, `--followup`). Other options:
 Answer file format — either a list of what happened (all categories considered asked):
 `{"2014": ["career", "relocation"], "2019": []}` — or with the categories that were asked:
 `{"2014": {"asked": ["career", "health", "family"], "happened": ["career"]}}`.
-Categories: `career relationship relocation wealth health family study`.
+Categories: `career relationship relocation wealth health family study good_year bad_year`.
+Decade comparisons go under `"decades": [[2010, 2020, "better"]]`.
 
 Scoring is a transparent likelihood model: each candidate assigns each category a
 probability (12% base rate + up to 70% from its chart signals: clashes/combinations on

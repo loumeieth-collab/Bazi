@@ -86,7 +86,7 @@ def cmd_verify(a) -> None:
         print(f"wrote {a.export_questions}")
         return
 
-    if a.answers or a.event:
+    if a.answers or a.event or a.decade:
         answers = {}
         if a.answers:
             with open(a.answers, encoding="utf-8") as fh:
@@ -97,6 +97,10 @@ def cmd_verify(a) -> None:
             y, _, cats = ev.partition(":")
             happened = [] if cats.strip() in ("", "none") else [c.strip() for c in cats.split(",")]
             merge_answer(answers, int(y), list(CATEGORIES) if not happened else happened, happened)
+        for d in a.decade or []:
+            # "2010:2020:better" — the luck decade active in 2020 felt better than the one in 2010
+            e, l, r = d.split(":")
+            answers.setdefault("decades", []).append([int(e), int(l), r])
     elif sys.stdin.isatty():
         print(f"Checking {len(cands)} candidate charts:")
         for c in cands:
@@ -152,6 +156,8 @@ def main(argv=None):
     pv.add_argument("--event", action="append", metavar="YEAR:CATS",
                     help="a remembered event, e.g. 2014:career or 2019:family,relocation; "
                          "2016:none for a year with nothing major (repeatable)")
+    pv.add_argument("--decade", action="append", metavar="EARLIER:LATER:RESULT",
+                    help="compare luck decades, e.g. 2010:2020:better (later felt better|same|worse)")
     pv.add_argument("--answers", help="JSON file of answers (skip the interactive prompts)")
     pv.add_argument("--rounds", type=int, default=3, help="max interactive rounds (default 3)")
     pv.add_argument("--followup", type=int, default=4, help="years per follow-up round (default 4)")

@@ -107,3 +107,14 @@ def test_spouse_palace_frame_and_combined_spouse_star():
     c = Chart(BIRTH, 8, "M", longitude=101.69)  # 丁亥 day; 2021 辛丑 completes 亥子丑
     assert year_signals(c, 2021)["relationship"] >= 0.7
     assert year_signals(c, 2011)["relationship"] >= 0.7  # 卯亥 half-combo + 辛 偏财
+
+
+def test_decade_and_year_quality():
+    from bazi.chart import Chart
+    from bazi.verify import decade_probability
+    d = Chart(BIRTH, 8, "M", longitude=101.69)   # 丁: 己卯 decade good, 庚辰 hard
+    w = Chart(BIRTH, 8, "M", zi_mode="early")    # 戊: both decades hard
+    assert decade_probability(d, 2010, 2020, "worse") > decade_probability(w, 2010, 2020, "worse")
+    for c in (d, w):
+        assert abs(sum(decade_probability(c, 2010, 2020, r) for r in ("better", "same", "worse")) - 1) < 0.2
+    assert year_signals(w, 2009)["good_year"] > year_signals(d, 2009)["good_year"]
