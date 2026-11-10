@@ -73,7 +73,8 @@ def cmd_verify(a) -> None:
     if a.time is None and not a.all_hours:
         a.all_hours = True
     cands = build_candidates(_birth(a), a.tz, a.gender, a.longitude,
-                             all_hours=a.all_hours, vary_gender=a.vary_gender)
+                             all_hours=a.all_hours, vary_gender=a.vary_gender,
+                             hour_pillar=a.hour_pillar)
     by = int(a.date[:4])
     years = list(range(a.from_year or by + 16, (a.to_year or datetime.now().year - 1) + 1))
     questions = select_questions(cands, years, n=a.questions)
@@ -152,6 +153,7 @@ def main(argv=None):
     pv.add_argument("--from-year", type=int, help="earliest year to consider (default: age 16)")
     pv.add_argument("--to-year", type=int, help="latest year to consider (default: last year)")
     pv.add_argument("--all-hours", action="store_true", help="test all 12 two-hour periods (unknown time)")
+    pv.add_argument("--hour-pillar", help="keep only candidates with this hour pillar, e.g. 壬子")
     pv.add_argument("--vary-gender", action="store_true", help="also test the other luck direction")
     pv.add_argument("--event", action="append", metavar="YEAR:CATS",
                     help="a remembered event, e.g. 2014:career or 2019:family,relocation; "

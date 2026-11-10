@@ -56,7 +56,9 @@ class Candidate:
 # ---------------------------------------------------------------------------
 
 def build_candidates(birth: datetime, tz: float, gender: str, longitude: float | None = None,
-                     all_hours: bool = False, vary_gender: bool = False) -> list[Candidate]:
+                     all_hours: bool = False, vary_gender: bool = False,
+                     hour_pillar: str | None = None) -> list[Candidate]:
+    """Candidate charts; `hour_pillar` (e.g. "壬子") keeps only charts with that hour."""
     raw: list[tuple[str, dict, float]] = []
     genders = ["M", "F"] if vary_gender else [gender]
     if all_hours:
@@ -77,11 +79,16 @@ def build_candidates(birth: datetime, tz: float, gender: str, longitude: float |
                 raw.append((f"birth time off by {delta:+d}h, true solar time",
                             {"birth_local": t, "longitude": longitude}, 0.4))
     out: dict[str, Candidate] = {}
+    if hour_pillar:  # ensure both day-change conventions are present for the given time
+        raw += [(f"{lab}, 23:00 rule=early", {**kw, "zi_mode": "early"}, pr)
+                for lab, kw, pr in list(raw) if "zi_mode" not in kw]
     for g in genders:
         for label, kw, prior in raw:
             kw = {"zi_mode": "late", **kw}
             c = Chart(utc_offset=tz, gender=g, **kw)
             lab = label + ("" if not vary_gender else f", {'male' if g == 'M' else 'female'}")
+            if hour_pillar and str(c.pillars.get("hour", "")) != hour_pillar:
+                continue
             cand = Candidate(lab, c, prior * (1.0 if g == gender else 0.5))
             if cand.key in out:  # same pillars → merge
                 out[cand.key].prior += cand.prior
@@ -89,6 +96,8 @@ def build_candidates(birth: datetime, tz: float, gender: str, longitude: float |
                     out[cand.key].label += f" / {lab}"
             else:
                 out[cand.key] = cand
+    if not out:
+        raise ValueError(f"no candidate chart has hour pillar {hour_pillar}")
     total = sum(c.prior for c in out.values())
     for c in out.values():
         c.prior /= total

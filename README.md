@@ -54,6 +54,7 @@ candidates (`--rounds`, `--followup`). Other options:
 | Option | Meaning |
 |---|---|
 | `--all-hours` | birth hour unknown: test all 12 two-hour periods (automatic if `--time` is omitted) |
+| `--hour-pillar 壬子` | hour pillar already known: test only charts with that hour (both day conventions) |
 | `--vary-gender` | also test the opposite luck-pillar direction |
 | `--event 2014:career --event 2019:family,relocation` | score events you remember (no prompts); `2016:none` marks a quiet year |
 | `--event 2021:good_year --event 2018:bad_year` | overall good / hard years |
