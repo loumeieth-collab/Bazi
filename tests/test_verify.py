@@ -124,3 +124,9 @@ def test_fixed_hour_pillar_keeps_both_day_conventions():
     cs = build_candidates(BIRTH, 8, "M", longitude=101.69, hour_pillar="壬子")
     assert {c.chart.day_master for c in cs} == {"丁", "戊"}
     assert all(str(c.chart.pillars["hour"]) == "壬子" for c in cs)
+
+
+def test_clashed_wealth_branch_signals_money():
+    from bazi.chart import Chart
+    w = Chart(BIRTH, 8, "M", zi_mode="early")  # 戊: 子 = 正财; 2026 午 clashes it
+    assert year_signals(w, 2026)["wealth"] >= 0.35

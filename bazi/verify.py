@@ -205,6 +205,16 @@ def year_signals(chart: Chart, year: int, pillar: Pillar | None = None) -> dict[
         s["study"] += 0.25
     if gods & {"正财", "偏财"}:
         s["wealth"] += 0.35
+    # wealth star in a natal branch clashed or combined (财星逢冲/合): money moves
+    wealth_hit = 0.0
+    for name, q in p.items():
+        if chart.ten_god(HIDDEN_STEMS[q.branch][0][0]) in ("正财", "偏财"):
+            r = {x for x, _ in branch_relations(yp.branch, q.branch)}
+            if "六冲" in r:
+                wealth_hit = max(wealth_hit, 0.35)
+            elif r & {"六合", "半三合"}:
+                wealth_hit = max(wealth_hit, 0.2)
+    s["wealth"] += wealth_hit
     if gods & {"劫财"}:
         s["wealth"] += 0.2
     if gods & {"正印", "偏印"}:
