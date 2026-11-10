@@ -89,7 +89,11 @@ def year_section(c: Chart, year: int) -> str:
                  f"{_god(c.ten_god(HIDDEN_STEMS[lp.branch][0][0]))})")
     L.append(f"- Year stem {p.stem}: **{_god(a.stem_god)}**; year branch {p.branch}: **{_god(a.branch_god)}**; "
              f"Day Master stage: {a.life_stage}")
-    L.append(f"- Overall rating: **{a.rating}** (score {a.score:+.2f})\n")
+    L.append(f"- Overall rating: **{a.rating}** (score {a.score:+.2f})")
+    from .verify import SHORT as _S, year_signals as _ys
+    ysig = _ys(c, year)
+    yl = [k for k in sorted(ysig, key=lambda k: -ysig[k]) if k not in ("good_year", "bad_year") and ysig[k] >= 0.4]
+    L.append(f"- Likely event areas: {', '.join(f'{_S[k]} ({ysig[k]:.1f})' for k in yl[:4]) or 'no strong signals'}\n")
     L.append("### Themes")
     L.append(f"- **Visible (stem, H1 emphasis) – {a.stem_god}:** {THEMES[a.stem_god]}")
     if a.branch_god != a.stem_god:
@@ -105,13 +109,18 @@ def year_section(c: Chart, year: int) -> str:
             L.append(f"- [{where}] {desc} ({'+' if imp > 0 else '−' if imp < 0 else '±'}{abs(imp):.2f})")
         L.append("")
     L.append("### Month by month 流月\n")
-    L.append("| Solar month | Dates | Pillar | Stem / Branch god | Rating | Key interactions |")
-    L.append("|---|---|---|---|---|---|")
+    from .verify import SHORT, year_signals
+    L.append("| Solar month | Dates | Pillar | Stem / Branch god | Rating | Likely events | Key interactions |")
+    L.append("|---|---|---|---|---|---|---|")
     for m in f["months"]:
+        sig = year_signals(c, year, m.pillar)
+        top = sorted((k for k in sig if k not in ("good_year", "bad_year") and sig[k] >= 0.4),
+                     key=lambda k: -sig[k])[:3]
+        likely = ", ".join(f"{SHORT[k]} ({sig[k]:.1f})" for k in top) or "quiet"
         keys = "; ".join(f"[{w}] {d.split(' — ')[0].split(' (')[0]}" for w, d, imp in m.interactions
                         if abs(imp) >= 0.2) or "—"
         L.append(f"| {m.label} ({m.jie}) | {m.start:%b %d} – {m.end:%b %d} | **{m.pillar}** | "
-                 f"{m.stem_god} / {m.branch_god} | {m.rating} | {keys} |")
+                 f"{m.stem_god} / {m.branch_god} | {m.rating} | {likely} | {keys} |")
     L.append("")
     best = sorted(f["months"], key=lambda m: -m.score)[:3]
     worst = sorted(f["months"], key=lambda m: m.score)[:3]

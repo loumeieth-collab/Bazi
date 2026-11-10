@@ -108,10 +108,12 @@ def _child_gods(chart: Chart) -> set[str]:
     return {"正官", "七杀"} if chart.gender == "M" else {"食神", "伤官"}
 
 
-def year_signals(chart: Chart, year: int) -> dict[str, float]:
-    """Predicted intensity (0..1) of each event category for `year`."""
+def year_signals(chart: Chart, year: int, pillar: Pillar | None = None) -> dict[str, float]:
+    """Predicted intensity (0..1) of each event category for `year`, or — when a
+    month `pillar` is given — for that solar month within `year`."""
     s = {k: 0.0 for k in CATEGORIES}
-    yp = year_pillar(year)
+    monthly = pillar is not None
+    yp = pillar if monthly else year_pillar(year)
     p = chart.pillars
     gods = {chart.ten_god(yp.stem), chart.ten_god(HIDDEN_STEMS[yp.branch][0][0])}
 
@@ -202,13 +204,18 @@ def year_signals(chart: Chart, year: int) -> dict[str, float]:
     # luck pillar context
     lp = chart.luck_pillar_for_year(year)
     if lp:
-        if lp["start"].year == year:
+        if lp["start"].year == year and not monthly:
             s["career"] += 0.2; s["relocation"] += 0.2
         if frozenset((yp.branch, lp["pillar"].branch)) in SIX_CLASHES:
             s["career"] += 0.15; s["relocation"] += 0.15
         ctx = {"luck": lp["pillar"]}
     else:
         ctx = {}
+    if monthly:
+        fy = year_pillar(year)
+        ctx["flow_year"] = fy
+        if frozenset((yp.branch, fy.branch)) in SIX_CLASHES:
+            s["career"] += 0.15; s["relocation"] += 0.15
     score = evaluate(chart, yp, str(year), ctx).score
     s["good_year"] = max(0.0, score / 2)
     s["bad_year"] = max(0.0, -score / 2)
