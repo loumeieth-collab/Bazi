@@ -101,6 +101,11 @@ def _spouse_gods(chart: Chart) -> set[str]:
     return {"正财", "偏财"} if chart.gender == "M" else {"正官", "七杀"}
 
 
+def _child_gods(chart: Chart) -> set[str]:
+    """Classical child star: officers for a man, output stars for a woman."""
+    return {"正官", "七杀"} if chart.gender == "M" else {"食神", "伤官"}
+
+
 def year_signals(chart: Chart, year: int) -> dict[str, float]:
     """Predicted intensity (0..1) of each event category for `year`."""
     s = {k: 0.0 for k in CATEGORIES}
@@ -156,6 +161,8 @@ def year_signals(chart: Chart, year: int) -> dict[str, float]:
     if hour & {"六合", "半三合"}:
         s["family"] += 0.35
     if hour & {"刑", "自刑", "害"}:
+        s["family"] += 0.2
+    if chart.ten_god(yp.stem) in _child_gods(chart):
         s["family"] += 0.2
     if "hour" in p:
         for r, _ in stem_relations(yp.stem, p["hour"].stem):
